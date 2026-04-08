@@ -72,6 +72,9 @@ const postMaterial = new THREE.MeshStandardMaterial({
     color: "blue"
 });
 
+const ropeMaterial = new THREE.MeshStandardMaterial({
+    color: "red"
+});
 
 // floor
 
@@ -117,6 +120,74 @@ const post4 = new THREE.Mesh(postGeometry, postMaterial);
     post4.position.set(4, 1, 4);
     post4.castShadow = true;
     scene.add(post4);
+
+// ropes
+
+const ropeGeometry = new THREE.CylinderGeometry(0.025, 0.025, 8, 8);
+
+// lower ropes
+const ropeLowFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeLowFront.rotation.z = Math.PI / 2;
+ropeLowFront.position.set(0, 0.6, -4);
+scene.add(ropeLowFront);
+
+const ropeLowBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeLowBack.rotation.z = Math.PI / 2;
+ropeLowBack.position.set(0, 0.6, 4);
+scene.add(ropeLowBack);
+
+const ropeLowLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeLowLeft.rotation.x = Math.PI / 2;
+ropeLowLeft.position.set(-4, 0.6, 0);
+scene.add(ropeLowLeft);
+
+const ropeLowRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeLowRight.rotation.x = Math.PI / 2;
+ropeLowRight.position.set(4, 0.6, 0);
+scene.add(ropeLowRight);
+
+//middle ropes
+const ropeMiddleFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeMiddleFront.rotation.z = Math.PI / 2;
+ropeMiddleFront.position.set(0, 1.2, -4);
+scene.add(ropeMiddleFront);
+
+const ropeMiddleBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeMiddleBack.rotation.z = Math.PI / 2;
+ropeMiddleBack.position.set(0, 1.2, 4);
+scene.add(ropeMiddleBack);
+
+const ropeMiddleLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeMiddleLeft.rotation.x = Math.PI / 2;
+ropeMiddleLeft.position.set(-4, 1.2, 0);
+scene.add(ropeMiddleLeft);
+
+const ropeMiddleRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeMiddleRight.rotation.x = Math.PI / 2;
+ropeMiddleRight.position.set(4, 1.2, 0);
+scene.add(ropeMiddleRight);
+
+// top ropes
+
+const ropeTopFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeTopFront.rotation.z = Math.PI /2;
+ropeTopFront.position.set(0, 1.8, -4);
+scene.add(ropeTopFront);
+
+const ropeTopBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeTopBack.rotation.z = Math.PI /2;
+ropeTopBack.position.set(0, 1.8, 4);
+scene.add(ropeTopBack);
+
+const ropeTopLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeTopLeft.rotation.x = Math.PI / 2;
+ropeTopLeft.position.set(-4, 1.8, 0);
+scene.add(ropeTopLeft);
+
+const ropeTopRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
+ropeTopRight.rotation.x = Math.PI / 2;
+ropeTopRight.position.set(4, 1.8, 0);
+scene.add(ropeTopRight);
 
 // animate
 
