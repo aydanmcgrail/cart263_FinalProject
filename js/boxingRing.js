@@ -48,13 +48,19 @@ controls.target.set(0, 1, 0);
 
 // lights
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight('white', 1.5);
+const directionalLight = new THREE.DirectionalLight('grey', 2);
 directionalLight.position.set(0, 10, 0);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
+
+const spotLight = new THREE.SpotLight('yellow', 40, 20, Math.PI * 0.1, 0.8);
+spotLight.position.set(0,10,0);
+spotLight.castShadow = true;
+scene.add(spotLight);
+scene.add(spotLight.target);
 
 // materials
 
