@@ -94,7 +94,7 @@ const wallMaterial = new THREE.MeshStandardMaterial({
 
 //ring floor
 const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 0.15, 8),
+    new THREE.BoxGeometry(8, 1, 8),
     floorMaterial
 );
 floor.receiveShadow = true;
@@ -113,25 +113,25 @@ scene.add(ground);
 
 // corner posts
 
-const postGeometry = new THREE.CylinderGeometry(0.07, 0.07, 2, 12);
+const postGeometry = new THREE.CylinderGeometry(0.07, 0.07, 2.5, 12);
 
 const post1 = new THREE.Mesh(postGeometry, postMaterial);
-    post1.position.set(-4, 1, -4);
+    post1.position.set(-4, .75, -4);
     post1.castShadow = true;
     scene.add(post1);
 
 const post2 = new THREE.Mesh(postGeometry, postMaterial);
-    post2.position.set(4, 1, -4);
+    post2.position.set(4, .75, -4);
     post2.castShadow = true;
     scene.add(post2);
 
 const post3 = new THREE.Mesh(postGeometry, postMaterial);
-    post3.position.set(-4, 1, 4);
+    post3.position.set(-4, .75, 4);
     post3.castShadow = true;
     scene.add(post3);
 
 const post4 = new THREE.Mesh(postGeometry, postMaterial);
-    post4.position.set(4, 1, 4);
+    post4.position.set(4, .75, 4);
     post4.castShadow = true;
     scene.add(post4);
 
