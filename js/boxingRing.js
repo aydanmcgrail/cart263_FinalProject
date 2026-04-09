@@ -82,6 +82,10 @@ const ropeMaterial = new THREE.MeshStandardMaterial({
     color: "red"
 });
 
+const crowdMaterial = new THREE.MeshStandardMaterial({
+    color: "white"
+});
+
 // floor
 
 //ring floor
@@ -194,6 +198,68 @@ const ropeTopRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
 ropeTopRight.rotation.x = Math.PI / 2;
 ropeTopRight.position.set(4, 1.8, 0);
 scene.add(ropeTopRight);
+
+// crowd stands
+
+//frontstands
+const stand1 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand1.position.set(0, -0.4, -10);
+scene.add(stand1);
+
+const stand2 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand2.position.set(0, -0.1, -11.1);
+scene.add(stand2);
+
+const stand3 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand3.position.set(0, 0.2, -12.2);
+scene.add(stand3);
+
+//back stands
+const stand4 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand4.position.set(0, -0.4, 10);
+scene.add(stand4);
+
+const stand5 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand5.position.set(0, -0.1, 11.1);
+scene.add(stand5);
+
+const stand6 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand6.position.set(0, 0.2, 12.2);
+scene.add(stand6);
+
+//left stands
+
+const stand7 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand7.position.set(-10, -0.4, 0);
+stand7.rotation.y = Math.PI / 2;
+scene.add(stand7);
+
+const stand8 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand8.position.set(-11, -0.1, 0);
+stand8.rotation.y = Math.PI / 2;
+scene.add(stand8);
+
+const stand9 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand9.position.set(-12, 0.2, 0);
+stand9.rotation.y = Math.PI / 2;
+scene.add(stand9);
+
+// right stands
+
+const stand10 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand10.position.set(10, -0.4, 0);
+stand10.rotation.y = Math.PI / 2;
+scene.add(stand10);
+
+const stand11 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand11.position.set(11, -0.1, 0);
+stand11.rotation.y = Math.PI / 2;
+scene.add(stand11);
+
+const stand12 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
+stand12.position.set(12, 0.2, 0);
+stand12.rotation.y = Math.PI / 2;
+scene.add(stand12);
 
 // animate
 
