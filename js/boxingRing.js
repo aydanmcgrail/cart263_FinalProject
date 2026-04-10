@@ -267,27 +267,27 @@ scene.add(stand12);
 
 // walls and ceiling
 
-const wallFront = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
-wallFront.position.set(0, 5, -20);
-scene.add(wallFront);
+// const wallFront = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
+// wallFront.position.set(0, 5, -20);
+// scene.add(wallFront);
 
-const wallBack = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
-wallBack.position.set(0, 5, 20);
-scene.add(wallBack);
+// const wallBack = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
+// wallBack.position.set(0, 5, 20);
+// scene.add(wallBack);
 
-const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
-wallLeft.position.set(-20, 5, 0);
-wallLeft.rotation.y = Math.PI / 2;
-scene.add(wallLeft);
+// const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
+// wallLeft.position.set(-20, 5, 0);
+// wallLeft.rotation.y = Math.PI / 2;
+// scene.add(wallLeft);
 
-const wallRight = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
-wallRight.position.set(20, 5, 0);
-wallRight.rotation.y = Math.PI / 2;
-scene.add(wallRight);
+// const wallRight = new THREE.Mesh(new THREE.BoxGeometry(40, 20, 0.5), wallMaterial);
+// wallRight.position.set(20, 5, 0);
+// wallRight.rotation.y = Math.PI / 2;
+// scene.add(wallRight);
 
-const ceiling = new THREE.Mesh(new THREE.BoxGeometry(40, 0.5, 40), wallMaterial);
-ceiling.position.set(0, 15, 0);
-scene.add(ceiling);
+// const ceiling = new THREE.Mesh(new THREE.BoxGeometry(40, 0.5, 40), wallMaterial);
+// ceiling.position.set(0, 15, 0);
+// scene.add(ceiling);
 
 // animate
 
