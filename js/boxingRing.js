@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
+const clock = new THREE.Clock();
 
 // canvas
 
@@ -325,6 +326,13 @@ scene.add(stand12);
 window.requestAnimationFrame(animate);
 
 function animate() {
+
+    const delta = clock.getDelta();
+
+    if (mixer) {
+        mixer.update(delta);
+    }
+    
     controls.update();
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
