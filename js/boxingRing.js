@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 // scene
 
@@ -19,7 +20,7 @@ const sizes = {
 
 // camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-camera.position.set(0 ,5, 12);
+camera.position.set(0, 5, 12);
 scene.add(camera);
 
 // renderer
@@ -57,10 +58,31 @@ directionalLight.castShadow = true;
 scene.add(directionalLight);
 
 const spotLight = new THREE.SpotLight('yellow', 40, 20, Math.PI * 0.1, 0.8);
-spotLight.position.set(0,10,0);
+spotLight.position.set(0, 10, 0);
 spotLight.castShadow = true;
 scene.add(spotLight);
 scene.add(spotLight.target);
+
+// Opponet
+
+let mixer
+let actions = [];
+
+const loader = new GLTFLoader();
+
+loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
+    const model = gltf.scene
+    scene.add(gltf.scene)
+
+
+    mixer = new THREE.AnimationMixer(gltf.scene)
+
+    gltf.animations.forEach((clip) => {
+        actions[clip.name] = mixer.clipAction(clip)
+    })
+
+    actions['right_punch'].play();
+})
 
 // materials
 
@@ -102,7 +124,7 @@ scene.add(floor);
 
 // floor of the room itself
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(60,60),
+    new THREE.PlaneGeometry(60, 60),
     groundMaterial
 );
 
@@ -116,24 +138,24 @@ scene.add(ground);
 const postGeometry = new THREE.CylinderGeometry(0.07, 0.07, 2.5, 12);
 
 const post1 = new THREE.Mesh(postGeometry, postMaterial);
-    post1.position.set(-4, .75, -4);
-    post1.castShadow = true;
-    scene.add(post1);
+post1.position.set(-4, .75, -4);
+post1.castShadow = true;
+scene.add(post1);
 
 const post2 = new THREE.Mesh(postGeometry, postMaterial);
-    post2.position.set(4, .75, -4);
-    post2.castShadow = true;
-    scene.add(post2);
+post2.position.set(4, .75, -4);
+post2.castShadow = true;
+scene.add(post2);
 
 const post3 = new THREE.Mesh(postGeometry, postMaterial);
-    post3.position.set(-4, .75, 4);
-    post3.castShadow = true;
-    scene.add(post3);
+post3.position.set(-4, .75, 4);
+post3.castShadow = true;
+scene.add(post3);
 
 const post4 = new THREE.Mesh(postGeometry, postMaterial);
-    post4.position.set(4, .75, 4);
-    post4.castShadow = true;
-    scene.add(post4);
+post4.position.set(4, .75, 4);
+post4.castShadow = true;
+scene.add(post4);
 
 // ropes
 
@@ -184,12 +206,12 @@ scene.add(ropeMiddleRight);
 // top ropes
 
 const ropeTopFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopFront.rotation.z = Math.PI /2;
+ropeTopFront.rotation.z = Math.PI / 2;
 ropeTopFront.position.set(0, 1.8, -4);
 scene.add(ropeTopFront);
 
 const ropeTopBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopBack.rotation.z = Math.PI /2;
+ropeTopBack.rotation.z = Math.PI / 2;
 ropeTopBack.position.set(0, 1.8, 4);
 scene.add(ropeTopBack);
 
@@ -293,8 +315,8 @@ scene.add(stand12);
 
 window.requestAnimationFrame(animate);
 
-function animate(){
+function animate() {
     controls.update();
     renderer.render(scene, camera);
-    window.requestAnimationFrame(animate);    
-    }
+    window.requestAnimationFrame(animate);
+}
