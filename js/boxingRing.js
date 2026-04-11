@@ -8,6 +8,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
 const clock = new THREE.Clock();
 
+
 // canvas
 
 const canvas = document.querySelector("canvas#three-ex");
@@ -67,13 +68,19 @@ scene.add(spotLight.target);
 // Opponent
 
 let mixer
+let boxer;
 let actions = [];
 
 const loader = new GLTFLoader();
 const ringFloorTopY = 0.5;
+const ringMinX = -3.6;
+const ringMaxX = 3.6;
+const ringMinZ = -3.6;
+const ringMaxZ = 3.6;
 
 loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
-    const model = gltf.scene
+    const model = gltf.scene;
+    boxer = model;
 
     model.scale.setScalar(0.25);
 
@@ -93,6 +100,38 @@ loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
 
     actions['right_punch'].play();
 })
+
+// collision for characters and ring
+
+function ringCollision() {
+    if (!boxer) return;
+
+    boxer.updateMatrixWorld(true);
+
+    const boxerBox = new THREE.Box3().setFromObject(boxer);
+
+    if (boxerBox.min.x < ringMinX) {
+        boxer.position.x += ringMinX - boxerBox.min.x;
+    }
+
+    if (boxerBox.max.x > ringMaxX) {
+        boxer.position.x -= boxerBox.max.x - ringMaxX;
+    }
+
+    if (boxerBox.min.z < ringMinZ) {
+        boxer.position.z += ringMinZ - boxerBox.min.z;
+    }
+
+    if (boxerBox.max.z > ringMaxZ) {
+        boxer.position.z -= boxerBox.max.z - ringMaxZ;
+    }
+
+    boxer.updateMatrixWorld(true);
+
+    const correctedBox = new THREE.Box3().setFromObject(boxer);
+    boxer.position.y += ringFloorTopY - correctedBox.min.y;
+}
+
 
 // materials
 
@@ -327,12 +366,14 @@ window.requestAnimationFrame(animate);
 
 function animate() {
 
-    const delta = clock.getDelta();
+    // const delta = clock.getDelta();
 
-    if (mixer) {
-        mixer.update(delta);
-    }
-    
+    // if (mixer) {
+    //     mixer.update(delta);
+    // }
+
+    ringCollision();
+
     controls.update();
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
