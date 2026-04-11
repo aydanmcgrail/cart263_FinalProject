@@ -63,7 +63,7 @@ spotLight.castShadow = true;
 scene.add(spotLight);
 scene.add(spotLight.target);
 
-// Opponet
+// Opponent
 
 let mixer
 let actions = [];
@@ -73,6 +73,9 @@ const ringFloorTopY = 0.5;
 
 loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
     const model = gltf.scene
+
+    model.scale.setScalar(0.25);
+
     model.updateMatrixWorld(true);
 
     const modelBox = new THREE.Box3().setFromObject(model);
