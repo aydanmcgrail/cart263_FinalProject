@@ -69,10 +69,16 @@ let mixer
 let actions = [];
 
 const loader = new GLTFLoader();
+const ringFloorTopY = 0.5;
 
 loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
     const model = gltf.scene
-    scene.add(gltf.scene)
+    model.updateMatrixWorld(true);
+
+    const modelBox = new THREE.Box3().setFromObject(model);
+    model.position.y = ringFloorTopY - modelBox.min.y;
+
+    scene.add(model)
 
 
     mixer = new THREE.AnimationMixer(gltf.scene)
