@@ -5,6 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 let player;
 const gloveLoader = new GLTFLoader();
 let gloveModelPromise;
+let playerHealthBarFill;
 
 // booleans for movement
 const keyState = {
@@ -17,6 +18,7 @@ const keyState = {
 // punch timing and reach distance for the punch animation.
 const punchDuration = 0.22;
 const punchReach = 0.35;
+const playerMaxHealth = 100;
 const gloveModelPath = "assets/3d_models/GantboxeBras.glb";
 const gloveModelScale = 0.26;
 const gloveModelRotation = new THREE.Euler(0, Math.PI / 2, 0);
@@ -49,6 +51,8 @@ export function setupPlayer(scene, camera, canvas, ringBounds) {
     player.rightGlove.position.copy(getBaseGlovePosition("right"));
     camera.add(player.leftGlove);
     camera.add(player.rightGlove);
+
+    createPlayerHealthBar();
 
     // event listener to lock pointer controls when canvas is clicked
     canvas.addEventListener("click", () => {
@@ -180,7 +184,76 @@ export function damagePlayer(amount) {
     if (!player || player.health <= 0) return;
 
     player.health = Math.max(0, player.health - amount);
+    updatePlayerHealthBar();
     console.log("Player Health:", player.health);
+}
+
+// creating the player's health UI in the bottom left corner of the viewport.
+function createPlayerHealthBar() {
+    const existingHealthBar = document.querySelector("#player-health-ui");
+
+    if (existingHealthBar) {
+        existingHealthBar.remove();
+    }
+
+    const healthContainer = document.createElement("div");
+    healthContainer.id = "player-health-ui";
+    healthContainer.style.position = "fixed";
+    healthContainer.style.left = "24px";
+    healthContainer.style.bottom = "24px";
+    healthContainer.style.zIndex = "10";
+    healthContainer.style.pointerEvents = "none";
+    healthContainer.style.fontFamily = "Arial, sans-serif";
+
+    // text label above the health bar so the player knows what the bar represents.
+    const healthLabel = document.createElement("div");
+    healthLabel.textContent = "HEALTH";
+    healthLabel.style.color = "white";
+    healthLabel.style.fontSize = "16px";
+    healthLabel.style.fontWeight = "bold";
+    healthLabel.style.marginBottom = "6px";
+    healthLabel.style.textShadow = "0 2px 4px black";
+
+    // black outer bar with a red background to show missing health.
+    const healthBarBackground = document.createElement("div");
+    healthBarBackground.style.width = "220px";
+    healthBarBackground.style.height = "18px";
+    healthBarBackground.style.background = "darkred";
+    healthBarBackground.style.border = "2px solid white";
+    healthBarBackground.style.boxSizing = "border-box";
+
+    // green fill that shrinks as the player takes damage.
+    playerHealthBarFill = document.createElement("div");
+    playerHealthBarFill.style.width = "100%";
+    playerHealthBarFill.style.height = "100%";
+    playerHealthBarFill.style.background = "limegreen";
+    playerHealthBarFill.style.transition = "width 0.15s linear, background 0.15s linear";
+
+    healthBarBackground.appendChild(playerHealthBarFill);
+    healthContainer.appendChild(healthLabel);
+    healthContainer.appendChild(healthBarBackground);
+    document.body.appendChild(healthContainer);
+
+    updatePlayerHealthBar();
+}
+
+// updating the player's health bar width and color based on current health.
+function updatePlayerHealthBar() {
+    if (!player || !playerHealthBarFill) return;
+
+    const healthPercent = THREE.MathUtils.clamp(player.health / playerMaxHealth, 0, 1);
+
+    playerHealthBarFill.style.width = `${healthPercent * 100}%`;
+
+    if (healthPercent > 0.5) {
+        playerHealthBarFill.style.background = "limegreen";
+    }
+    else if (healthPercent > 0.25) {
+        playerHealthBarFill.style.background = "yellow";
+    }
+    else {
+        playerHealthBarFill.style.background = "red";
+    }
 }
 
 // Movement controls, making the booleans turn true when keys are pressed

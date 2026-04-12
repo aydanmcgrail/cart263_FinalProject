@@ -88,7 +88,7 @@ function checkOpponentPunch() {
 
     // applying damage if the two hit spheres overlap, calling noteOpponentPunch to prevent repeated damage from the same animation.
     if (distance <= punch.radius + player.radius) {
-        damagePlayer(5);
+        damagePlayer(10);
         noteOpponentPunch();
     }
 }
