@@ -175,6 +175,14 @@ export function notePunch() {
     player.hitDuringPunch = true;
 }
 
+// function to apply damage to the player, making sure health does not go below zero.
+export function damagePlayer(amount) {
+    if (!player || player.health <= 0) return;
+
+    player.health = Math.max(0, player.health - amount);
+    console.log("Player Health:", player.health);
+}
+
 // Movement controls, making the booleans turn true when keys are pressed
 function handleKeyDown(event) {
     if (event.code === "KeyW") keyState.forward = true;

@@ -6,8 +6,11 @@ let opponent;
 let mixer;
 let actions = {};
 let currentAttack;
+let currentAttackTimer = 0;
+let currentAttackDuration = 0;
 let attackIndex = 0;
 let attackTimer = 0;
+let hitDuringAttack = false;
 let opponentHealth = 100;
 
 const loader = new GLTFLoader();
@@ -15,6 +18,11 @@ const attackNames = ["double_punch", "left_punch", "right_punch"];
 const opponentSpeed = 1.25;
 const attackRange = 1.35;
 const attackDelay = 0.35;
+const punchActiveStart = 0.28;
+const punchActiveEnd = 0.68;
+const punchForwardDistance = 0.9;
+const punchHeightOffset = 1.2;
+const punchRadius = 0.25;
 const modelFacingOffset = 0;
 
 // Loading the GLB file for the opponent model and setting up the animations.
@@ -46,6 +54,10 @@ export function updateOpponent(deltaTime, ringBounds) {
         mixer.update(deltaTime);
     }
 
+    if (currentAttack) {
+        currentAttackTimer += deltaTime;
+    }
+
     updateOpponentAI(deltaTime);
     keepOpponentInsideRing(ringBounds);
 }
@@ -60,6 +72,48 @@ export function damageOpponent(amount) {
 
     opponentHealth = Math.max(0, opponentHealth - amount);
     console.log("Opponent Health;", opponentHealth)
+}
+
+// Exporting the current opponent punch position so boxingRing.js can test it against the player.
+export function getOpponentPunch() {
+    if (!opponent || !currentAttack || hitDuringAttack || currentAttackDuration <= 0) return null;
+
+    // Only counting the punch during the middle of the animation so windup and recovery do not damage the player.
+    const attackProgress = currentAttackTimer / currentAttackDuration;
+    if (attackProgress < punchActiveStart || attackProgress > punchActiveEnd) return null;
+
+    const player = getPlayer();
+    if (!player) return null;
+
+    // Finding the flat direction toward the player so the hit sphere appears in front of the opponent.
+    const directionToPlayer = new THREE.Vector3(
+        player.camera.position.x - opponent.position.x,
+        0,
+        player.camera.position.z - opponent.position.z
+    );
+
+    if (directionToPlayer.length() <= 0.001) return null;
+
+    directionToPlayer.normalize();
+
+    // Using the opponent's current hitbox to keep the punch height stable even while animations shift the model origin.
+    opponent.updateMatrixWorld(true);
+    const opponentBox = new THREE.Box3().setFromObject(opponent);
+
+    // Placing an invisible hit sphere around where the opponent's glove reaches during a punch.
+    const punchPoint = opponent.position.clone();
+    punchPoint.add(directionToPlayer.multiplyScalar(punchForwardDistance));
+    punchPoint.y = opponentBox.min.y + punchHeightOffset;
+
+    return {
+        point: punchPoint,
+        radius: punchRadius
+    };
+}
+
+// Acknowledging a punch has hit so that one opponent attack cannot damage the player multiple times.
+export function noteOpponentPunch() {
+    hitDuringAttack = true;
 }
 
 function keepOpponentInsideRing(ringBounds) {
@@ -160,6 +214,9 @@ function playNextAttack() {
     nextAttack.play();
 
     currentAttack = nextAttack;
+    currentAttackTimer = 0;
+    currentAttackDuration = nextAttack.getClip().duration;
+    hitDuringAttack = false;
     attackIndex = (attackIndex + 1) % attackNames.length;
-    attackTimer = nextAttack.getClip().duration + attackDelay;
+    attackTimer = currentAttackDuration + attackDelay;
 }

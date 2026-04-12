@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { loadOpponent, updateOpponent, getOpponent, damageOpponent } from "./opponent.js";
-import { setupPlayer, updatePlayer, getPunch, notePunch } from "./player.js";
+import { loadOpponent, updateOpponent, getOpponent, damageOpponent, getOpponentPunch, noteOpponentPunch } from "./opponent.js";
+import { setupPlayer, updatePlayer, getPunch, notePunch, getPlayer, damagePlayer } from "./player.js";
 
 
 // scene
@@ -69,6 +69,27 @@ function checkPlayerPunch() {
     if (distance <= punch.radius) {
         damageOpponent(5);
         notePunch();
+    }
+}
+
+// function to check if the opponent's punch intersects with the player's hitbox, applying damage and preventing one attack from hitting multiple times.
+function checkOpponentPunch() {
+    const player = getPlayer();
+    const punch = getOpponentPunch();
+
+    if (!player || !punch) return;
+
+    // using the camera as the center of the player, then lowering it slightly so hits land around the upper body instead of only the eyes.
+    const playerHitPoint = player.camera.position.clone();
+    playerHitPoint.y -= 0.45;
+
+    // calculating the distance between the opponent's punch sphere and the player's body sphere.
+    const distance = playerHitPoint.distanceTo(punch.point);
+
+    // applying damage if the two hit spheres overlap, calling noteOpponentPunch to prevent repeated damage from the same animation.
+    if (distance <= punch.radius + player.radius) {
+        damagePlayer(5);
+        noteOpponentPunch();
     }
 }
 
@@ -333,6 +354,7 @@ function animate() {
     updateOpponent(delta, ringBounds);
 
     checkPlayerPunch();
+    checkOpponentPunch();
 
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
