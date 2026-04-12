@@ -30,6 +30,9 @@ const modelFacingOffset = 0;
 const healthBarWidth = 1.1;
 const healthBarHeight = 0.12;
 const healthBarYOffset = 0.35;
+const opponentHitSound = new Audio("assets/sounds/ouch.mp3");
+opponentHitSound.volume = 0.6;
+
 
 // Loading the GLB file for the opponent model and setting up the animations.
 
@@ -80,6 +83,8 @@ export function damageOpponent(amount) {
 
     opponentHealth = Math.max(0, opponentHealth - amount);
     console.log("Opponent Health;", opponentHealth)
+
+    playOpponentHitSound();
 }
 
 // exporting the current opponent punch position so boxingRing.js can test it against the player.
@@ -124,6 +129,13 @@ export function noteOpponentPunch() {
     hitDuringAttack = true;
 }
 
+// playing a sound effect when opponent takes damage
+function playOpponentHitSound() {
+    opponentHitSound.currentTime = 0;
+    opponentHitSound.play();
+}
+
+// keeping the opponent inside the ring by checking hitbox bounds
 function keepOpponentInsideRing(ringBounds) {
     if (!opponent) return;
 
