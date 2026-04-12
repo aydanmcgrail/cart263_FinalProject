@@ -12,8 +12,11 @@ let attackIndex = 0;
 let attackTimer = 0;
 let hitDuringAttack = false;
 let opponentHealth = 100;
+let healthBar;
+let healthBarFill;
 
 const loader = new GLTFLoader();
+const opponentMaxHealth = 100;
 const attackNames = ["double_punch", "left_punch", "right_punch"];
 const opponentSpeed = 1.25;
 const attackRange = 1.35;
@@ -24,6 +27,9 @@ const punchForwardDistance = 0.9;
 const punchHeightOffset = 1.2;
 const punchRadius = 0.25;
 const modelFacingOffset = 0;
+const healthBarWidth = 1.1;
+const healthBarHeight = 0.12;
+const healthBarYOffset = 0.35;
 
 // Loading the GLB file for the opponent model and setting up the animations.
 
@@ -38,6 +44,7 @@ export function loadOpponent(scene, ringBounds) {
         opponent.position.y = ringBounds.floorTopY - modelBox.min.y;
 
         scene.add(opponent);
+        createHealthBar(scene);
 
         mixer = new THREE.AnimationMixer(opponent);
 
@@ -47,7 +54,7 @@ export function loadOpponent(scene, ringBounds) {
     });
 }
 
-//Updating the animations, AI movement, attacks, and preventing out of bounds 
+//updating the animations, AI movement, attacks, and preventing out of bounds 
 
 export function updateOpponent(deltaTime, ringBounds) {
     if (mixer) {
@@ -60,6 +67,7 @@ export function updateOpponent(deltaTime, ringBounds) {
 
     updateOpponentAI(deltaTime);
     keepOpponentInsideRing(ringBounds);
+    updateHealthBar();
 }
 
 export function getOpponent() {
@@ -74,18 +82,18 @@ export function damageOpponent(amount) {
     console.log("Opponent Health;", opponentHealth)
 }
 
-// Exporting the current opponent punch position so boxingRing.js can test it against the player.
+// exporting the current opponent punch position so boxingRing.js can test it against the player.
 export function getOpponentPunch() {
     if (!opponent || !currentAttack || hitDuringAttack || currentAttackDuration <= 0) return null;
 
-    // Only counting the punch during the middle of the animation so windup and recovery do not damage the player.
+    // only counting the punch during the middle of the animation so windup and recovery do not damage the player.
     const attackProgress = currentAttackTimer / currentAttackDuration;
     if (attackProgress < punchActiveStart || attackProgress > punchActiveEnd) return null;
 
     const player = getPlayer();
     if (!player) return null;
 
-    // Finding the flat direction toward the player so the hit sphere appears in front of the opponent.
+    // finding the flat direction toward the player so the hit sphere appears in front of the opponent.
     const directionToPlayer = new THREE.Vector3(
         player.camera.position.x - opponent.position.x,
         0,
@@ -96,11 +104,11 @@ export function getOpponentPunch() {
 
     directionToPlayer.normalize();
 
-    // Using the opponent's current hitbox to keep the punch height stable even while animations shift the model origin.
+    // using the opponent's current hitbox to keep the punch height stable even while animations shift the model origin.
     opponent.updateMatrixWorld(true);
     const opponentBox = new THREE.Box3().setFromObject(opponent);
 
-    // Placing an invisible hit sphere around where the opponent's glove reaches during a punch.
+    // placing an invisible hit sphere around where the opponent's glove reaches during a punch.
     const punchPoint = opponent.position.clone();
     punchPoint.add(directionToPlayer.multiplyScalar(punchForwardDistance));
     punchPoint.y = opponentBox.min.y + punchHeightOffset;
@@ -143,6 +151,93 @@ function keepOpponentInsideRing(ringBounds) {
 
     const correctedBox = new THREE.Box3().setFromObject(opponent);
     opponent.position.y += ringBounds.floorTopY - correctedBox.min.y;
+}
+
+// Creating a small 3D health bar that will float above the opponent instead of being fixed to the screen.
+function createHealthBar(scene) {
+    healthBar = new THREE.Group();
+
+    const backgroundMaterial = new THREE.MeshBasicMaterial({
+        color: "black",
+        side: THREE.DoubleSide
+    });
+
+    const missingHealthMaterial = new THREE.MeshBasicMaterial({
+        color: "darkred",
+        side: THREE.DoubleSide
+    });
+
+    const fillMaterial = new THREE.MeshBasicMaterial({
+        color: "limegreen",
+        side: THREE.DoubleSide
+    });
+
+    // black background is slightly larger so it works like a border around the health bar.
+    const background = new THREE.Mesh(
+        new THREE.PlaneGeometry(healthBarWidth + 0.08, healthBarHeight + 0.08),
+        backgroundMaterial
+    );
+
+    // red bar sits behind the green fill so missing health is visible as the opponent takes damage.
+    const missingHealth = new THREE.Mesh(
+        new THREE.PlaneGeometry(healthBarWidth, healthBarHeight),
+        missingHealthMaterial
+    );
+    missingHealth.position.z = 0.001;
+
+    // green fill is scaled from left to right based on the opponent's current health.
+    healthBarFill = new THREE.Mesh(
+        new THREE.PlaneGeometry(healthBarWidth, healthBarHeight),
+        fillMaterial
+    );
+    healthBarFill.position.z = 0.002;
+
+    healthBar.add(background);
+    healthBar.add(missingHealth);
+    healthBar.add(healthBarFill);
+    scene.add(healthBar);
+
+    updateHealthBar();
+}
+
+// Updating the health bar position, size, and rotation so it stays above the opponent and faces the player's camera.
+function updateHealthBar() {
+    if (!opponent || !healthBar || !healthBarFill) return;
+
+    opponent.updateMatrixWorld(true);
+    const opponentBox = new THREE.Box3().setFromObject(opponent);
+    const opponentCenter = opponentBox.getCenter(new THREE.Vector3());
+
+    // placing the health bar above the opponent's current animated hitbox.
+    healthBar.position.set(
+        opponentCenter.x,
+        opponentBox.max.y + healthBarYOffset,
+        opponentCenter.z
+    );
+
+    const player = getPlayer();
+
+    // copying the camera rotation makes the bar behave like a billboard that always faces the player.
+    if (player) {
+        healthBar.quaternion.copy(player.camera.quaternion);
+    }
+
+    const healthPercent = THREE.MathUtils.clamp(opponentHealth / opponentMaxHealth, 0, 1);
+
+    // scaling and shifting the green fill keeps the left edge anchored while the right side shrinks.
+    healthBarFill.scale.x = healthPercent;
+    healthBarFill.position.x = (healthPercent - 1) * healthBarWidth * 0.5;
+
+    // changing color gives a quick read on low health without needing text.
+    if (healthPercent > 0.5) {
+        healthBarFill.material.color.set("limegreen");
+    }
+    else if (healthPercent > 0.25) {
+        healthBarFill.material.color.set("yellow");
+    }
+    else {
+        healthBarFill.material.color.set("red");
+    }
 }
 
 // AI function to make the opponent face the player, move toward them, and attack when close enough.
