@@ -12,6 +12,7 @@ let attackIndex = 0;
 let attackTimer = 0;
 let hitDuringAttack = false;
 let opponentHealth = 100;
+let speechTimer = 0;
 let healthBar;
 let healthBarFill;
 let damageFlashTimer = 0;
@@ -34,8 +35,12 @@ const healthBarHeight = 0.12;
 const healthBarYOffset = 0.35;
 const damageFlashDuration = 0.2;
 const damageFlashStrength = 0.3;
+const speechDelayMin = 5;
+const speechDelayMax = 12;
 const opponentHitSound = new Audio("assets/sounds/ouch.mp3");
 opponentHitSound.volume = 0.6;
+const opponentSpeechSound = new Audio("assets/sounds/speech.wav");
+opponentSpeechSound.volume = 0.65;
 
 
 // Loading the GLB file for the opponent model and setting up the animations.
@@ -59,6 +64,8 @@ export function loadOpponent(scene, ringBounds) {
         gltf.animations.forEach((clip) => {
             actions[clip.name] = mixer.clipAction(clip);
         });
+
+        speechTimer = getRandomSpeechDelay();
     });
 }
 
@@ -75,6 +82,7 @@ export function updateOpponent(deltaTime, ringBounds) {
 
     updateOpponentAI(deltaTime);
     keepOpponentInsideRing(ringBounds);
+    updateOpponentSpeech(deltaTime);
     updateDamageFlash(deltaTime);
     updateHealthBar();
 }
@@ -140,6 +148,33 @@ export function noteOpponentPunch() {
 function playOpponentHitSound() {
     opponentHitSound.currentTime = 0;
     opponentHitSound.play().catch(() => {
+        // prevents browser autoplay rules from creating errors before the player interacts with the page.
+    });
+}
+
+// choosing a random delay so the opponent speech does not happen at a predictable rhythm.
+function getRandomSpeechDelay() {
+    return THREE.MathUtils.randFloat(speechDelayMin, speechDelayMax);
+}
+
+// updating the opponent speech timer and playing the speech sound whenever the random delay runs out.
+function updateOpponentSpeech(deltaTime) {
+    if (!opponent || opponentHealth <= 0) return;
+
+    speechTimer -= deltaTime;
+
+    if (speechTimer > 0) return;
+
+    playOpponentSpeech();
+    speechTimer = getRandomSpeechDelay();
+}
+
+// playing the opponent speech sound, restarting it only if it is not already playing.
+function playOpponentSpeech() {
+    if (!opponentSpeechSound.paused) return;
+
+    opponentSpeechSound.currentTime = 0;
+    opponentSpeechSound.play().catch(() => {
         // prevents browser autoplay rules from creating errors before the player interacts with the page.
     });
 }

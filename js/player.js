@@ -21,12 +21,16 @@ const keyState = {
 // punch timing and reach distance for the punch animation.
 const punchDuration = 0.22;
 const punchReach = 0.35;
+
+// player health and thresholds for the blood overlay
 const playerMaxHealth = 100;
 const lowHealthThreshold = 50;
 const lowHealthImagePaths = [
     "assets/images/blood2.png",
     "assets/images/blood.png"
 ];
+
+// paths, scaling, rotation, and positioning for the glove model and hit point, which is where the punch is considered to connect for collision detection. The hit point is placed at the knuckles of the glove model.
 const gloveModelPath = "assets/3d_models/GantboxeBras.glb";
 const gloveModelScale = 0.26;
 const gloveModelRotation = new THREE.Euler(0, Math.PI / 2, 0);
