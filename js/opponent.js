@@ -7,6 +7,8 @@ let actions = {};
 
 const loader = new GLTFLoader();
 
+// Loading the GLB file for the opponent model and setting up the animations.
+
 export function loadOpponent(scene, ringBounds) {
     loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
         opponent = gltf.scene;
@@ -25,9 +27,11 @@ export function loadOpponent(scene, ringBounds) {
             actions[clip.name] = mixer.clipAction(clip);
         });
 
-        actions['right_punch'].play();
+        actions['left_punch'].play();
     });
 }
+
+//Updating the animations and preventing out of bounds 
 
 export function updateOpponent(deltaTime, ringBounds) {
     if (mixer) {

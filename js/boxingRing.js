@@ -1,7 +1,6 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { loadOpponent, updateOpponent } from "./opponent.js";
+import { setupPlayer, updatePlayer } from "./player.js";
 
 
 // scene
@@ -57,15 +56,10 @@ const ringBounds = {
 };
 
 // importing opponent model and functions
-
 loadOpponent(scene, ringBounds);
 
-
-// controls
-
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
-controls.target.set(0, 1, 0);
+// importing player functions 
+setupPlayer(scene, camera, canvas, ringBounds);
 
 // lights
 
@@ -320,9 +314,9 @@ function animate() {
 
     const delta = clock.getDelta();
 
-    //updateOpponent(delta, ringBounds);
+    updatePlayer(delta, ringBounds);
+    updateOpponent(delta, ringBounds);
 
-    controls.update();
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
 }
