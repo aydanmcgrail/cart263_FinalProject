@@ -170,6 +170,7 @@ export function getPunch() {
 
 }
 
+// acknnowledging a punch has hit so that a single punch doesn't register multiple hits.
 export function notePunch() {
     player.hitDuringPunch = true;
 }
