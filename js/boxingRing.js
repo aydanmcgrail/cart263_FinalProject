@@ -106,16 +106,23 @@ setupPlayer(scene, camera, canvas, ringBounds);
 createStartScreen();
 
 // lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight('grey', 2);
-directionalLight.position.set(0, 10, 0);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+directionalLight.position.set(0, 8, 4);
 directionalLight.castShadow = true;
 scene.add(directionalLight);
 
-const spotLight = new THREE.SpotLight('yellow', 40, 20, Math.PI * 0.1, 0.8);
-spotLight.position.set(0, 10, 0);
+const frontFillLight = new THREE.DirectionalLight(0xffffff, 1.8);
+frontFillLight.position.set(0, 3, 5);
+frontFillLight.target.position.set(0, 1.4, 0);
+scene.add(frontFillLight);
+scene.add(frontFillLight.target);
+
+const spotLight = new THREE.SpotLight(0xfff1c4, 45, 22, Math.PI * 0.18, 0.75);
+spotLight.position.set(0, 7, 3);
+spotLight.target.position.set(0, 1.2, 0);
 spotLight.castShadow = true;
 scene.add(spotLight);
 scene.add(spotLight.target);
@@ -393,12 +400,11 @@ function createStartScreen() {
     document.body.appendChild(startOverlay);
     showTitleScreen(startOverlay);
 
-    // first click starts the music and moves to controls, second click removes the overlay and locks the game controls.
+    // first click moves to controls, second click removes the overlay and starts the game.
     startOverlay.addEventListener("click", (event) => {
         event.stopPropagation();
 
         if (startScreenStep === "title") {
-            playCircusMusic();
             startScreenStep = "controls";
             showControlsScreen(startOverlay);
             return;
@@ -444,6 +450,7 @@ function playCircusMusic() {
 // removing the menu overlay and locking pointer controls so gameplay begins immediately.
 function startGame(startOverlay) {
     gameStarted = true;
+    playCircusMusic();
     startOverlay.remove();
     clock.getDelta();
 
