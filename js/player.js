@@ -1,7 +1,10 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 let player;
+const gloveLoader = new GLTFLoader();
+let gloveModelPromise;
 
 // booleans for movement
 const keyState = {
@@ -11,11 +14,14 @@ const keyState = {
     right: false
 };
 
-// base positions for the gloves, punch timing, and reach distance for the punch animation.
-const baseLeftGlovePosition = new THREE.Vector3(-0.28, -0.32, -0.65);
-const baseRightGlovePosition = new THREE.Vector3(0.28, -0.32, -0.65);
+// punch timing and reach distance for the punch animation.
 const punchDuration = 0.22;
 const punchReach = 0.35;
+const gloveModelPath = "assets/3d_models/GantboxeBras.glb";
+const gloveModelScale = 0.26;
+const gloveModelRotation = new THREE.Euler(0, Math.PI / 2, 0);
+const gloveModelOffset = new THREE.Vector3(0, -0.02, 0);
+const gloveHitPointOffset = new THREE.Vector3(0, 0.02, -0.34);
 
 
 // player properties, controls, and event listeners for movement and punching. Also includes functions to keep the player within the ring bounds and to update the punch animation.
@@ -25,22 +31,22 @@ export function setupPlayer(scene, camera, canvas, ringBounds) {
     player = {
         controls,
         camera,
-        height: 1.65,
+        height: 1.72,
         radius: 0.35,
         speed: 3.2,
         health: 100,
         punchTimer: 0,
         punchSide: null,
         hitDuringPunch: false,
-        leftGlove: createGlove(),
-        rightGlove: createGlove()
+        leftGlove: createGlove("left"),
+        rightGlove: createGlove("right")
     };
 
     // "first person" camera setup, positioning the camera at the player's height and adding the gloves as children of the camera so they move with it 
     camera.position.set(0, ringBounds.floorTopY + player.height, 2.4);
 
-    player.leftGlove.position.copy(baseLeftGlovePosition);
-    player.rightGlove.position.copy(baseRightGlovePosition);
+    player.leftGlove.position.copy(getBaseGlovePosition("left"));
+    player.rightGlove.position.copy(getBaseGlovePosition("right"));
     camera.add(player.leftGlove);
     camera.add(player.rightGlove);
 
@@ -72,34 +78,94 @@ export function getPlayer() {
     return player;
 }
 
-// creating the glove element for the player, simplem sphere for now
-function createGlove() {
-    const geometry = new THREE.SphereGeometry(0.14, 16, 16);
-    const material = new THREE.MeshStandardMaterial({
-        color: "red",
-        roughness: 0.55
+// loading the arm and glove model once, then cloning it for each hand
+function loadGloveModel() {
+    if (!gloveModelPromise) {
+        gloveModelPromise = new Promise((resolve, reject) => {
+            gloveLoader.load(gloveModelPath, (gltf) => {
+                resolve(gltf.scene);
+            }, undefined, reject);
+        });
+    }
+
+    return gloveModelPromise;
+}
+
+// creating the glove group for the player, with a hidden hit point at the knuckles
+function createGlove(side) {
+    const group = new THREE.Group();
+    const hitPoint = new THREE.Object3D();
+
+    group.scale.x = side === "left" ? -1 : 1;
+    hitPoint.position.copy(gloveHitPointOffset);
+    group.userData.hitPoint = hitPoint;
+    group.add(hitPoint);
+
+    loadGloveModel().then((sourceModel) => {
+        const model = sourceModel.clone(true);
+
+        model.scale.setScalar(gloveModelScale);
+        model.rotation.copy(gloveModelRotation);
+        model.position.copy(gloveModelOffset);
+
+        model.traverse((child) => {
+            if (!child.isMesh) return;
+
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            if (Array.isArray(child.material)) {
+                child.material = child.material.map((material) => prepareGloveMaterial(material));
+            }
+            else {
+                child.material = prepareGloveMaterial(child.material);
+            }
+        });
+
+        group.add(model);
+    }).catch((error) => {
+        console.error("Could not load player glove model:", error);
     });
 
-    return new THREE.Mesh(geometry, material);
+    return group;
+}
+
+function prepareGloveMaterial(material) {
+    const preparedMaterial = material.clone();
+    preparedMaterial.side = THREE.DoubleSide;
+    preparedMaterial.roughness = Math.max(preparedMaterial.roughness ?? 0.55, 0.55);
+
+    return preparedMaterial;
+}
+
+function getBaseGlovePosition(side) {
+    const aspect = player?.camera.aspect ?? window.innerWidth / window.innerHeight;
+    const narrowAmount = THREE.MathUtils.clamp((1.15 - aspect) / 0.75, 0, 1);
+    const xOffset = THREE.MathUtils.lerp(0.34, 0.18, narrowAmount);
+    const yOffset = THREE.MathUtils.lerp(-0.5, -0.43, narrowAmount);
+    const zOffset = THREE.MathUtils.lerp(-0.55, -0.72, narrowAmount);
+
+    return new THREE.Vector3(side === "left" ? -xOffset : xOffset, yOffset, zOffset);
 }
 
 // Exporting the location and side of the punch for collision detection
-export function getPunch(){
+export function getPunch() {
 
     if (!player || !player.punchSide || player.hitDuringPunch) return null;
-     
+
     // which glove is punching
     const glove = player.punchSide === "left" ? player.leftGlove : player.rightGlove;
 
     // locating the position of the punch in the scene/world
     const punchPoint = new THREE.Vector3();
-    glove.getWorldPosition(punchPoint);
+    const hitPoint = glove.userData.hitPoint ?? glove;
+    hitPoint.getWorldPosition(punchPoint);
 
     // returning the punch information as an object, including which side the punch is on, the location of the punch, and a radius for collision detection
     return {
         side: player.punchSide,
         point: punchPoint,
-        radius: 0.02
+        radius: 0.09
     }
 
 }
@@ -178,8 +244,8 @@ function keepPlayerInsideRing(ringBounds) {
 
 // glove and punnch handling and animation
 function updatePunch(deltaTime) {
-    player.leftGlove.position.copy(baseLeftGlovePosition);
-    player.rightGlove.position.copy(baseRightGlovePosition);
+    player.leftGlove.position.copy(getBaseGlovePosition("left"));
+    player.rightGlove.position.copy(getBaseGlovePosition("right"));
 
     // if no punch is currently happening, exit the function
     if (!player.punchSide) return;
