@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { loadOpponent, updateOpponent } from "./opponent.js";
+
 
 // scene
 
@@ -43,6 +45,22 @@ window.addEventListener("resize", () => {
     renderer.setSize(sizes.width, sizes.height);
 });
 
+
+// bounds
+
+const ringBounds = {
+    floorTopY: 0.5,
+    minX: -3.6,
+    maxX: 3.6,
+    minZ: -3.6,
+    maxZ: 3.6
+};
+
+// importing opponent model and functions
+
+loadOpponent(scene, ringBounds);
+
+
 // controls
 
 const controls = new OrbitControls(camera, canvas);
@@ -65,72 +83,6 @@ spotLight.castShadow = true;
 scene.add(spotLight);
 scene.add(spotLight.target);
 
-// Opponent
-
-let mixer
-let boxer;
-let actions = [];
-
-const loader = new GLTFLoader();
-const ringFloorTopY = 0.5;
-const ringMinX = -3.6;
-const ringMaxX = 3.6;
-const ringMinZ = -3.6;
-const ringMaxZ = 3.6;
-
-loader.load('assets/3d_models/boxer_model_final.glb', (gltf) => {
-    const model = gltf.scene;
-    boxer = model;
-
-    model.scale.setScalar(0.25);
-
-    model.updateMatrixWorld(true);
-
-    const modelBox = new THREE.Box3().setFromObject(model);
-    model.position.y = ringFloorTopY - modelBox.min.y;
-
-    scene.add(model)
-
-
-    mixer = new THREE.AnimationMixer(gltf.scene)
-
-    gltf.animations.forEach((clip) => {
-        actions[clip.name] = mixer.clipAction(clip)
-    })
-
-    actions['right_punch'].play();
-})
-
-// collision for characters and ring
-
-function ringCollision() {
-    if (!boxer) return;
-
-    boxer.updateMatrixWorld(true);
-
-    const boxerBox = new THREE.Box3().setFromObject(boxer);
-
-    if (boxerBox.min.x < ringMinX) {
-        boxer.position.x += ringMinX - boxerBox.min.x;
-    }
-
-    if (boxerBox.max.x > ringMaxX) {
-        boxer.position.x -= boxerBox.max.x - ringMaxX;
-    }
-
-    if (boxerBox.min.z < ringMinZ) {
-        boxer.position.z += ringMinZ - boxerBox.min.z;
-    }
-
-    if (boxerBox.max.z > ringMaxZ) {
-        boxer.position.z -= boxerBox.max.z - ringMaxZ;
-    }
-
-    boxer.updateMatrixWorld(true);
-
-    const correctedBox = new THREE.Box3().setFromObject(boxer);
-    boxer.position.y += ringFloorTopY - correctedBox.min.y;
-}
 
 
 // materials
@@ -366,13 +318,9 @@ window.requestAnimationFrame(animate);
 
 function animate() {
 
-    // const delta = clock.getDelta();
+    const delta = clock.getDelta();
 
-    // if (mixer) {
-    //     mixer.update(delta);
-    // }
-
-    ringCollision();
+    //updateOpponent(delta, ringBounds);
 
     controls.update();
     renderer.render(scene, camera);
