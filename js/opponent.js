@@ -37,6 +37,7 @@ const damageFlashDuration = 0.2;
 const damageFlashStrength = 0.3;
 const speechDelayMin = 5;
 const speechDelayMax = 12;
+const attackAnimationSpeed = 1.7;
 const opponentHitSound = new Audio("assets/sounds/ouch.mp3");
 opponentHitSound.volume = 0.6;
 const opponentSpeechSound = new Audio("assets/sounds/speech.wav");
@@ -443,6 +444,9 @@ function playNextAttack() {
     }
 
     nextAttack.reset();
+
+    nextAttack.timeScale = attackAnimationSpeed;
+
     nextAttack.setLoop(THREE.LoopOnce, 1);
     nextAttack.clampWhenFinished = true;
     nextAttack.fadeIn(0.1);
@@ -453,5 +457,6 @@ function playNextAttack() {
     currentAttackDuration = nextAttack.getClip().duration;
     hitDuringAttack = false;
     attackIndex = (attackIndex + 1) % attackNames.length;
-    attackTimer = currentAttackDuration + attackDelay;
+    attackTimer = currentAttackDuration / attackAnimationSpeed + attackDelay;
+
 }
