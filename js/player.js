@@ -6,6 +6,9 @@ let player;
 const gloveLoader = new GLTFLoader();
 let gloveModelPromise;
 let playerHealthBarFill;
+let playerDamageFlashOverlay;
+let playerDamageFlashTimeout;
+let lowHealthImageOverlay;
 
 // booleans for movement
 const keyState = {
@@ -19,6 +22,11 @@ const keyState = {
 const punchDuration = 0.22;
 const punchReach = 0.35;
 const playerMaxHealth = 100;
+const lowHealthThreshold = 50;
+const lowHealthImagePaths = [
+    "assets/images/blood2.png",
+    "assets/images/blood.png"
+];
 const gloveModelPath = "assets/3d_models/GantboxeBras.glb";
 const gloveModelScale = 0.26;
 const gloveModelRotation = new THREE.Euler(0, Math.PI / 2, 0);
@@ -53,6 +61,8 @@ export function setupPlayer(scene, camera, canvas, ringBounds) {
     camera.add(player.rightGlove);
 
     createPlayerHealthBar();
+    createPlayerDamageFlash();
+    createLowHealthImageOverlay();
 
     // event listener to lock pointer controls when canvas is clicked
     canvas.addEventListener("click", () => {
@@ -185,6 +195,7 @@ export function damagePlayer(amount) {
 
     player.health = Math.max(0, player.health - amount);
     updatePlayerHealthBar();
+    startPlayerDamageFlash();
     console.log("Player Health:", player.health);
 }
 
@@ -254,6 +265,109 @@ function updatePlayerHealthBar() {
     else {
         playerHealthBarFill.style.background = "red";
     }
+
+    updateLowHealthImageOverlay();
+}
+
+// creating a full-screen red overlay that flashes when the player takes damage.
+function createPlayerDamageFlash() {
+    const existingDamageFlash = document.querySelector("#player-damage-flash");
+
+    if (existingDamageFlash) {
+        existingDamageFlash.remove();
+    }
+
+    playerDamageFlashOverlay = document.createElement("div");
+    playerDamageFlashOverlay.id = "player-damage-flash";
+    playerDamageFlashOverlay.style.position = "fixed";
+    playerDamageFlashOverlay.style.left = "0";
+    playerDamageFlashOverlay.style.top = "0";
+    playerDamageFlashOverlay.style.width = "100vw";
+    playerDamageFlashOverlay.style.height = "100vh";
+    playerDamageFlashOverlay.style.zIndex = "20";
+    playerDamageFlashOverlay.style.pointerEvents = "none";
+    playerDamageFlashOverlay.style.background = "rgba(255, 0, 0, 0.2)";
+    playerDamageFlashOverlay.style.opacity = "0";
+    playerDamageFlashOverlay.style.transition = "opacity 0.2s linear";
+
+    document.body.appendChild(playerDamageFlashOverlay);
+}
+
+// briefly showing the red overlay, then fading it back out after the player is damaged.
+function startPlayerDamageFlash() {
+    if (!playerDamageFlashOverlay) return;
+
+    if (playerDamageFlashTimeout) {
+        clearTimeout(playerDamageFlashTimeout);
+    }
+
+    // resetting the transition lets repeated hits restart the flash immediately.
+    playerDamageFlashOverlay.style.transition = "none";
+    playerDamageFlashOverlay.style.opacity = "1";
+
+    window.requestAnimationFrame(() => {
+        playerDamageFlashOverlay.style.transition = "opacity 0.2s linear";
+        playerDamageFlashOverlay.style.opacity = "0";
+    });
+
+    playerDamageFlashTimeout = setTimeout(() => {
+        playerDamageFlashOverlay.style.opacity = "0";
+    }, 220);
+}
+
+// creating the low health screen overlay using both blood splatter PNGs.
+function createLowHealthImageOverlay() {
+    const existingLowHealthOverlay = document.querySelector("#low-health-image-overlay");
+
+    if (existingLowHealthOverlay) {
+        existingLowHealthOverlay.remove();
+    }
+
+    lowHealthImageOverlay = document.createElement("div");
+    lowHealthImageOverlay.id = "low-health-image-overlay";
+    lowHealthImageOverlay.style.position = "fixed";
+    lowHealthImageOverlay.style.left = "0";
+    lowHealthImageOverlay.style.top = "0";
+    lowHealthImageOverlay.style.width = "100vw";
+    lowHealthImageOverlay.style.height = "100vh";
+    lowHealthImageOverlay.style.zIndex = "15";
+    lowHealthImageOverlay.style.pointerEvents = "none";
+    lowHealthImageOverlay.style.opacity = "0";
+    lowHealthImageOverlay.style.transition = "opacity 0.2s linear";
+
+    lowHealthImagePaths.forEach((imagePath, index) => {
+        const image = document.createElement("img");
+        image.src = imagePath;
+        image.alt = "";
+        image.draggable = false;
+        image.style.position = "absolute";
+        image.style.width = "56vw";
+        image.style.maxWidth = "720px";
+        image.style.height = "auto";
+        image.style.userSelect = "none";
+
+        // placing the two images on opposite sides so they frame the viewport instead of covering only one spot.
+        if (index === 0) {
+            image.style.left = "-6vw";
+            image.style.top = "-4vh";
+        }
+        else {
+            image.style.right = "-5vw";
+            image.style.bottom = "-6vh";
+        }
+
+        lowHealthImageOverlay.appendChild(image);
+    });
+
+    document.body.appendChild(lowHealthImageOverlay);
+    updateLowHealthImageOverlay();
+}
+
+// showing the image overlay only when the player has 50 health or lower.
+function updateLowHealthImageOverlay() {
+    if (!player || !lowHealthImageOverlay) return;
+
+    lowHealthImageOverlay.style.opacity = player.health <= lowHealthThreshold ? "1" : "0";
 }
 
 // Movement controls, making the booleans turn true when keys are pressed
