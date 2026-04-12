@@ -75,8 +75,6 @@ function checkPlayerPunch() {
 // importing opponent model and functions
 loadOpponent(scene, ringBounds);
 
-const opponent = getOpponent();
-
 // importing player functions 
 setupPlayer(scene, camera, canvas, ringBounds);
 
