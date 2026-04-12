@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 let opponent;
 let mixer;
 let actions = {};
+let opponentHealth = 100;
 
 const loader = new GLTFLoader();
 
@@ -43,6 +44,14 @@ export function updateOpponent(deltaTime, ringBounds) {
 
 export function getOpponent() {
     return opponent;
+}
+
+// function to apply damage to the opponent, ensuring health does not drop below 0 and logging the current health to the console.
+export function damageOpponent(amount) {
+    if (opponentHealth <= 0) return;
+
+    opponentHealth = Math.max(0, opponentHealth - amount);
+    console.log("Opponent Health;", opponentHealth)
 }
 
 function keepOpponentInsideRing(ringBounds) {

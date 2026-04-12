@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { loadOpponent, updateOpponent, getOpponent } from "./opponent.js";
-import { setupPlayer, updatePlayer, } from "./player.js";
+import { loadOpponent, updateOpponent, getOpponent, damageOpponent } from "./opponent.js";
+import { setupPlayer, updatePlayer, getPunch, notePunch } from "./player.js";
 
 
 // scene
@@ -49,6 +49,28 @@ const ringBounds = {
     minZ: -3.6,
     maxZ: 3.6
 };
+
+// function to check if the player's punch intersects with the opponent's hitbox, applying damage if a hit is detected and ensuring that only one hit can be registered per punch animation.
+function checkPlayerPunch() {
+    const opponent = getOpponent();
+    const punch = getPunch();
+
+    if (!punch || !opponent) return;
+
+    // updating the opponent's world matrix to ensure the hitbox is in the correct position for collision detection
+    const opponentBox = new THREE.Box3().setFromObject(opponent);
+    opponentBox.expandByScalar(-0.5)
+    // finding the closest point on the opponent's hitbox to the punch point
+    const closestPoint = punch.point.clone().clamp(opponentBox.min, opponentBox.max)
+    // calculating the distance from the punch point to the closest point on the opponent's hitbox
+    const distance = closestPoint.distanceTo(punch.point);
+
+    // applying damage if punch is in bounds, calling notePunch to prevent multiple hits from the same punch
+    if (distance <= punch.radius) {
+        damageOpponent(5);
+        notePunch();
+    }
+}
 
 // importing opponent model and functions
 loadOpponent(scene, ringBounds);
@@ -310,7 +332,9 @@ function animate() {
     const delta = clock.getDelta();
 
     updatePlayer(delta, ringBounds);
-    // updateOpponent(delta, ringBounds);
+    updateOpponent(delta, ringBounds);
+
+    checkPlayerPunch();
 
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);

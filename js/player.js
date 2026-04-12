@@ -31,6 +31,7 @@ export function setupPlayer(scene, camera, canvas, ringBounds) {
         health: 100,
         punchTimer: 0,
         punchSide: null,
+        hitDuringPunch: false,
         leftGlove: createGlove(),
         rightGlove: createGlove()
     };
@@ -85,7 +86,7 @@ function createGlove() {
 // Exporting the location and side of the punch for collision detection
 export function getPunch(){
 
-    if (!player || !player.punchSide) return null;
+    if (!player || !player.punchSide || player.hitDuringPunch) return null;
      
     // which glove is punching
     const glove = player.punchSide === "left" ? player.leftGlove : player.rightGlove;
@@ -98,9 +99,13 @@ export function getPunch(){
     return {
         side: player.punchSide,
         point: punchPoint,
-        radius: 0.22
+        radius: 0.02
     }
 
+}
+
+export function notePunch() {
+    player.hitDuringPunch = true;
 }
 
 // Movement controls, making the booleans turn true when keys are pressed
@@ -126,12 +131,15 @@ function handleMouseDown(event) {
     if (event.button === 0) {
         player.punchSide = "left";
         player.punchTimer = 0;
+        player.hitDuringPunch = false;
     }
 
     if (event.button === 2) {
         player.punchSide = "right";
         player.punchTimer = 0;
+        player.hitDuringPunch = false;
     }
+
 }
 
 // reading input and moving the player accordingly
