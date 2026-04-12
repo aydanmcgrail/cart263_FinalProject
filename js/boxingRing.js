@@ -7,6 +7,11 @@ import { setupPlayer, updatePlayer, getPunch, notePunch, getPlayer, damagePlayer
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
 const clock = new THREE.Clock();
+let gameStarted = false;
+let startScreenStep = "title";
+const circusMusic = new Audio("assets/sounds/circus.mp3");
+circusMusic.loop = true;
+circusMusic.volume = 0.55;
 
 
 // canvas
@@ -98,6 +103,7 @@ loadOpponent(scene, ringBounds);
 
 // importing player functions 
 setupPlayer(scene, camera, canvas, ringBounds);
+createStartScreen();
 
 // lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
@@ -350,12 +356,100 @@ function animate() {
 
     const delta = clock.getDelta();
 
-    updatePlayer(delta, ringBounds);
-    updateOpponent(delta, ringBounds);
+    if (gameStarted) {
+        updatePlayer(delta, ringBounds);
+        updateOpponent(delta, ringBounds);
 
-    checkPlayerPunch();
-    checkOpponentPunch();
+        checkPlayerPunch();
+        checkOpponentPunch();
+    }
 
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
+}
+
+// creating the opening UI flow that shows the title first, then controls, then starts the actual game.
+function createStartScreen() {
+    const startOverlay = document.createElement("div");
+    startOverlay.id = "start-screen";
+    startOverlay.style.position = "fixed";
+    startOverlay.style.left = "0";
+    startOverlay.style.top = "0";
+    startOverlay.style.width = "100vw";
+    startOverlay.style.height = "100vh";
+    startOverlay.style.zIndex = "100";
+    startOverlay.style.display = "flex";
+    startOverlay.style.flexDirection = "column";
+    startOverlay.style.alignItems = "center";
+    startOverlay.style.justifyContent = "center";
+    startOverlay.style.background = "rgba(5, 5, 12, 0.94)";
+    startOverlay.style.color = "white";
+    startOverlay.style.fontFamily = "Arial, sans-serif";
+    startOverlay.style.cursor = "pointer";
+    startOverlay.style.textAlign = "center";
+    startOverlay.style.padding = "32px";
+    startOverlay.style.boxSizing = "border-box";
+
+    document.body.appendChild(startOverlay);
+    showTitleScreen(startOverlay);
+
+    // first click starts the music and moves to controls, second click removes the overlay and locks the game controls.
+    startOverlay.addEventListener("click", (event) => {
+        event.stopPropagation();
+
+        if (startScreenStep === "title") {
+            playCircusMusic();
+            startScreenStep = "controls";
+            showControlsScreen(startOverlay);
+            return;
+        }
+
+        startGame(startOverlay);
+    });
+}
+
+// showing the title page before the player sees the controls.
+function showTitleScreen(startOverlay) {
+    startOverlay.innerHTML = `
+        <h1 style="font-size: 64px; margin: 0 0 18px; letter-spacing: 0; text-transform: uppercase;">Consume Or Die</h1>
+        <p style="font-size: 20px; margin: 0;">Click to continue</p>
+    `;
+}
+
+// showing the control list after the first click.
+function showControlsScreen(startOverlay) {
+    startOverlay.innerHTML = `
+        <h1 style="font-size: 44px; margin: 0 0 28px; letter-spacing: 0; text-transform: uppercase;">Controls</h1>
+        <div style="font-size: 22px; line-height: 1.8; text-align: left;">
+            <div><strong>W</strong> - Move forward</div>
+            <div><strong>A</strong> - Move left</div>
+            <div><strong>S</strong> - Move backward</div>
+            <div><strong>D</strong> - Move right</div>
+            <div><strong>Mouse</strong> - Look around</div>
+            <div><strong>Left Click</strong> - Left punch</div>
+            <div><strong>Right Click</strong> - Right punch</div>
+        </div>
+        <p style="font-size: 18px; margin: 30px 0 0;">Click to start</p>
+    `;
+}
+
+// playing the looping circus music after the first user interaction.
+function playCircusMusic() {
+    circusMusic.currentTime = 0;
+    circusMusic.play().catch(() => {
+        // browser audio rules may block playback until a user gesture is accepted.
+    });
+}
+
+// removing the menu overlay and locking pointer controls so gameplay begins immediately.
+function startGame(startOverlay) {
+    gameStarted = true;
+    startOverlay.remove();
+    clock.getDelta();
+
+    const player = getPlayer();
+
+    if (player) {
+        player.controls.lock();
+    }
 }
