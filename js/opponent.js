@@ -14,6 +14,8 @@ let hitDuringAttack = false;
 let opponentHealth = 100;
 let healthBar;
 let healthBarFill;
+let damageFlashTimer = 0;
+let damageFlashMaterials = [];
 
 const loader = new GLTFLoader();
 const opponentMaxHealth = 100;
@@ -30,6 +32,8 @@ const modelFacingOffset = 0;
 const healthBarWidth = 1.1;
 const healthBarHeight = 0.12;
 const healthBarYOffset = 0.35;
+const damageFlashDuration = 0.2;
+const damageFlashStrength = 0.3;
 const opponentHitSound = new Audio("assets/sounds/ouch.mp3");
 opponentHitSound.volume = 0.6;
 
@@ -41,6 +45,7 @@ export function loadOpponent(scene, ringBounds) {
         opponent = gltf.scene;
 
         opponent.scale.setScalar(0.25);
+        prepareDamageFlashMaterials();
         opponent.updateMatrixWorld(true);
 
         const modelBox = new THREE.Box3().setFromObject(opponent);
@@ -70,6 +75,7 @@ export function updateOpponent(deltaTime, ringBounds) {
 
     updateOpponentAI(deltaTime);
     keepOpponentInsideRing(ringBounds);
+    updateDamageFlash(deltaTime);
     updateHealthBar();
 }
 
@@ -85,6 +91,7 @@ export function damageOpponent(amount) {
     console.log("Opponent Health;", opponentHealth)
 
     playOpponentHitSound();
+    startDamageFlash();
 }
 
 // exporting the current opponent punch position so boxingRing.js can test it against the player.
@@ -132,7 +139,93 @@ export function noteOpponentPunch() {
 // playing a sound effect when opponent takes damage
 function playOpponentHitSound() {
     opponentHitSound.currentTime = 0;
-    opponentHitSound.play();
+    opponentHitSound.play().catch(() => {
+        // prevents browser autoplay rules from creating errors before the player interacts with the page.
+    });
+}
+
+// storing the opponent's original material colors so the flash can tint it without changing opacity.
+function prepareDamageFlashMaterials() {
+    damageFlashMaterials = [];
+
+    opponent.traverse((child) => {
+        if (!child.isMesh || !child.material) return;
+
+        if (Array.isArray(child.material)) {
+            child.material = child.material.map((material) => cloneDamageFlashMaterial(material));
+        }
+        else {
+            child.material = cloneDamageFlashMaterial(child.material);
+        }
+    });
+}
+
+// cloning a material and saving the values that get restored after the red flash.
+function cloneDamageFlashMaterial(material) {
+    const clonedMaterial = material.clone();
+
+    damageFlashMaterials.push({
+        material: clonedMaterial,
+        color: clonedMaterial.color ? clonedMaterial.color.clone() : null,
+        emissive: clonedMaterial.emissive ? clonedMaterial.emissive.clone() : null,
+        emissiveIntensity: clonedMaterial.emissiveIntensity,
+        opacity: clonedMaterial.opacity,
+        transparent: clonedMaterial.transparent
+    });
+
+    return clonedMaterial;
+}
+
+// starting the red damage flash when the opponent is hit.
+function startDamageFlash() {
+    damageFlashTimer = damageFlashDuration;
+    setDamageFlashMaterials();
+}
+
+// updating the flash timer every frame and restoring materials when the flash is done.
+function updateDamageFlash(deltaTime) {
+    if (damageFlashTimer <= 0) return;
+
+    damageFlashTimer -= deltaTime;
+
+    if (damageFlashTimer <= 0) {
+        restoreDamageFlashMaterials();
+    }
+}
+
+// tinting the existing opaque materials red without changing their transparency.
+function setDamageFlashMaterials() {
+    damageFlashMaterials.forEach((entry) => {
+        if (entry.color && entry.material.color) {
+            entry.material.color.copy(entry.color).lerp(new THREE.Color("red"), damageFlashStrength);
+        }
+
+        if (entry.emissive && entry.material.emissive) {
+            entry.material.emissive.copy(entry.emissive).lerp(new THREE.Color("red"), damageFlashStrength);
+            entry.material.emissiveIntensity = Math.max(entry.emissiveIntensity ?? 1, 1);
+        }
+
+        // keeping the original opacity settings untouched so the opponent mesh never becomes transparent.
+        entry.material.opacity = entry.opacity;
+        entry.material.transparent = entry.transparent;
+    });
+}
+
+// restoring the original material colors after the flash.
+function restoreDamageFlashMaterials() {
+    damageFlashMaterials.forEach((entry) => {
+        if (entry.color && entry.material.color) {
+            entry.material.color.copy(entry.color);
+        }
+
+        if (entry.emissive && entry.material.emissive) {
+            entry.material.emissive.copy(entry.emissive);
+            entry.material.emissiveIntensity = entry.emissiveIntensity;
+        }
+
+        entry.material.opacity = entry.opacity;
+        entry.material.transparent = entry.transparent;
+    });
 }
 
 // keeping the opponent inside the ring by checking hitbox bounds
