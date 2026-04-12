@@ -1,21 +1,18 @@
 import * as THREE from "three";
-import { loadOpponent, updateOpponent } from "./opponent.js";
-import { setupPlayer, updatePlayer } from "./player.js";
+import { loadOpponent, updateOpponent, getOpponent } from "./opponent.js";
+import { setupPlayer, updatePlayer, } from "./player.js";
 
 
 // scene
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
 const clock = new THREE.Clock();
 
 
 // canvas
-
 const canvas = document.querySelector("canvas#three-ex");
 
 // sizes
-
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -27,7 +24,6 @@ camera.position.set(0, 5, 12);
 scene.add(camera);
 
 // renderer
-
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 });
@@ -46,7 +42,6 @@ window.addEventListener("resize", () => {
 
 
 // bounds
-
 const ringBounds = {
     floorTopY: 0.5,
     minX: -3.6,
@@ -58,11 +53,12 @@ const ringBounds = {
 // importing opponent model and functions
 loadOpponent(scene, ringBounds);
 
+const opponent = getOpponent();
+
 // importing player functions 
 setupPlayer(scene, camera, canvas, ringBounds);
 
 // lights
-
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
@@ -80,7 +76,6 @@ scene.add(spotLight.target);
 
 
 // materials
-
 const floorMaterial = new THREE.MeshStandardMaterial({
     color: 'beige'
 });
@@ -315,7 +310,7 @@ function animate() {
     const delta = clock.getDelta();
 
     updatePlayer(delta, ringBounds);
-    updateOpponent(delta, ringBounds);
+    // updateOpponent(delta, ringBounds);
 
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);

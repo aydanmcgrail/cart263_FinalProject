@@ -82,6 +82,27 @@ function createGlove() {
     return new THREE.Mesh(geometry, material);
 }
 
+// Exporting the location and side of the punch for collision detection
+export function getPunch(){
+
+    if (!player || !player.punchSide) return null;
+     
+    // which glove is punching
+    const glove = player.punchSide === "left" ? player.leftGlove : player.rightGlove;
+
+    // locating the position of the punch in the scene/world
+    const punchPoint = new THREE.Vector3();
+    glove.getWorldPosition(punchPoint);
+
+    // returning the punch information as an object, including which side the punch is on, the location of the punch, and a radius for collision detection
+    return {
+        side: player.punchSide,
+        point: punchPoint,
+        radius: 0.22
+    }
+
+}
+
 // Movement controls, making the booleans turn true when keys are pressed
 function handleKeyDown(event) {
     if (event.code === "KeyW") keyState.forward = true;
@@ -158,13 +179,15 @@ function updatePunch(deltaTime) {
     // punch time is equal to time elapsed since previous frame, so that the punch consistently takes the same amount of time regardless of fps
     player.punchTimer += deltaTime;
 
-    // 
+    // how far into the punch the player is 
     const progress = Math.min(player.punchTimer / punchDuration, 1);
+    // sine wave for smooth punch, based on the current position of the punch in progress
     const extension = Math.sin(progress * Math.PI) * punchReach;
+    // which glove to move based on which punch is happening
     const glove = player.punchSide === "left" ? player.leftGlove : player.rightGlove;
-
+    // moving the glove
     glove.position.z -= extension;
-
+    // once the punch is complete, reset the punch 
     if (progress >= 1) {
         player.punchSide = null;
         player.punchTimer = 0;
