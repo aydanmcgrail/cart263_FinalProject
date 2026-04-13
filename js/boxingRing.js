@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { loadOpponent, updateOpponent, getOpponent, damageOpponent, getOpponentPunch, noteOpponentPunch } from "./opponent.js";
 import { setupPlayer, updatePlayer, getPunch, notePunch, getPlayer, damagePlayer } from "./player.js";
+import { createRing, ringBounds } from "./ring.js";
+
+
 
 
 // scene
@@ -8,10 +11,16 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0a1a);
 const clock = new THREE.Clock();
 let gameStarted = false;
-let startScreenStep = "title";
+let gameOver = false;
+let controlsHint;
+let controlsMenu;
+let controlsMenuOpen = false;
+let losingOverlay;
 const circusMusic = new Audio("assets/sounds/circus.mp3");
 circusMusic.loop = true;
 circusMusic.volume = 0.55;
+const booSound = new Audio("assets/sounds/boo.mp3");
+booSound.volume = 0.8;
 
 
 // canvas
@@ -45,15 +54,10 @@ window.addEventListener("resize", () => {
     renderer.setSize(sizes.width, sizes.height);
 });
 
+// create the ring
+createRing(scene);
 
-// bounds
-const ringBounds = {
-    floorTopY: 0.5,
-    minX: -3.6,
-    maxX: 3.6,
-    minZ: -3.6,
-    maxZ: 3.6
-};
+
 
 // function to check if the player's punch intersects with the opponent's hitbox, applying damage if a hit is detected and ensuring that only one hit can be registered per punch animation.
 function checkPlayerPunch() {
@@ -104,6 +108,8 @@ loadOpponent(scene, ringBounds);
 // importing player functions 
 setupPlayer(scene, camera, canvas, ringBounds);
 createStartScreen();
+createControlsMenu();
+window.addEventListener("keydown", handleGameMenuKeyDown);
 
 // lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
@@ -128,208 +134,6 @@ scene.add(spotLight);
 scene.add(spotLight.target);
 
 
-
-// materials
-const floorMaterial = new THREE.MeshStandardMaterial({
-    color: 'beige'
-});
-floorMaterial.roughness = 0.9;
-
-const groundMaterial = new THREE.MeshStandardMaterial({
-    color: "maroon"
-});
-groundMaterial.roughness = 0.95;
-
-const postMaterial = new THREE.MeshStandardMaterial({
-    color: "blue"
-});
-
-const ropeMaterial = new THREE.MeshStandardMaterial({
-    color: "red"
-});
-
-const crowdMaterial = new THREE.MeshStandardMaterial({
-    color: "white"
-});
-
-const wallMaterial = new THREE.MeshStandardMaterial({
-    color: "black"
-});
-
-// floor
-
-//ring floor
-const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 1, 8),
-    floorMaterial
-);
-floor.receiveShadow = true;
-scene.add(floor);
-
-// floor of the room itself
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(60, 60),
-    groundMaterial
-);
-
-ground.rotation.x = -Math.PI * 0.5;
-ground.position.y = -0.68;
-ground.receiveShadow = true;
-scene.add(ground);
-
-// corner posts
-
-const postGeometry = new THREE.CylinderGeometry(0.07, 0.07, 2.5, 12);
-
-const post1 = new THREE.Mesh(postGeometry, postMaterial);
-post1.position.set(-4, .75, -4);
-post1.castShadow = true;
-scene.add(post1);
-
-const post2 = new THREE.Mesh(postGeometry, postMaterial);
-post2.position.set(4, .75, -4);
-post2.castShadow = true;
-scene.add(post2);
-
-const post3 = new THREE.Mesh(postGeometry, postMaterial);
-post3.position.set(-4, .75, 4);
-post3.castShadow = true;
-scene.add(post3);
-
-const post4 = new THREE.Mesh(postGeometry, postMaterial);
-post4.position.set(4, .75, 4);
-post4.castShadow = true;
-scene.add(post4);
-
-// ropes
-
-const ropeGeometry = new THREE.CylinderGeometry(0.025, 0.025, 8, 8);
-
-// lower ropes
-const ropeLowFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeLowFront.rotation.z = Math.PI / 2;
-ropeLowFront.position.set(0, 0.6, -4);
-scene.add(ropeLowFront);
-
-const ropeLowBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeLowBack.rotation.z = Math.PI / 2;
-ropeLowBack.position.set(0, 0.6, 4);
-scene.add(ropeLowBack);
-
-const ropeLowLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeLowLeft.rotation.x = Math.PI / 2;
-ropeLowLeft.position.set(-4, 0.6, 0);
-scene.add(ropeLowLeft);
-
-const ropeLowRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeLowRight.rotation.x = Math.PI / 2;
-ropeLowRight.position.set(4, 0.6, 0);
-scene.add(ropeLowRight);
-
-//middle ropes
-const ropeMiddleFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeMiddleFront.rotation.z = Math.PI / 2;
-ropeMiddleFront.position.set(0, 1.2, -4);
-scene.add(ropeMiddleFront);
-
-const ropeMiddleBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeMiddleBack.rotation.z = Math.PI / 2;
-ropeMiddleBack.position.set(0, 1.2, 4);
-scene.add(ropeMiddleBack);
-
-const ropeMiddleLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeMiddleLeft.rotation.x = Math.PI / 2;
-ropeMiddleLeft.position.set(-4, 1.2, 0);
-scene.add(ropeMiddleLeft);
-
-const ropeMiddleRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeMiddleRight.rotation.x = Math.PI / 2;
-ropeMiddleRight.position.set(4, 1.2, 0);
-scene.add(ropeMiddleRight);
-
-// top ropes
-
-const ropeTopFront = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopFront.rotation.z = Math.PI / 2;
-ropeTopFront.position.set(0, 1.8, -4);
-scene.add(ropeTopFront);
-
-const ropeTopBack = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopBack.rotation.z = Math.PI / 2;
-ropeTopBack.position.set(0, 1.8, 4);
-scene.add(ropeTopBack);
-
-const ropeTopLeft = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopLeft.rotation.x = Math.PI / 2;
-ropeTopLeft.position.set(-4, 1.8, 0);
-scene.add(ropeTopLeft);
-
-const ropeTopRight = new THREE.Mesh(ropeGeometry, ropeMaterial);
-ropeTopRight.rotation.x = Math.PI / 2;
-ropeTopRight.position.set(4, 1.8, 0);
-scene.add(ropeTopRight);
-
-// crowd stands
-
-//frontstands
-const stand1 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand1.position.set(0, -0.4, -10);
-scene.add(stand1);
-
-const stand2 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand2.position.set(0, -0.1, -11.1);
-scene.add(stand2);
-
-const stand3 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand3.position.set(0, 0.2, -12.2);
-scene.add(stand3);
-
-//back stands
-const stand4 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand4.position.set(0, -0.4, 10);
-scene.add(stand4);
-
-const stand5 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand5.position.set(0, -0.1, 11.1);
-scene.add(stand5);
-
-const stand6 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand6.position.set(0, 0.2, 12.2);
-scene.add(stand6);
-
-//left stands
-
-const stand7 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand7.position.set(-10, -0.4, 0);
-stand7.rotation.y = Math.PI / 2;
-scene.add(stand7);
-
-const stand8 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand8.position.set(-11, -0.1, 0);
-stand8.rotation.y = Math.PI / 2;
-scene.add(stand8);
-
-const stand9 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand9.position.set(-12, 0.2, 0);
-stand9.rotation.y = Math.PI / 2;
-scene.add(stand9);
-
-// right stands
-
-const stand10 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand10.position.set(10, -0.4, 0);
-stand10.rotation.y = Math.PI / 2;
-scene.add(stand10);
-
-const stand11 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand11.position.set(11, -0.1, 0);
-stand11.rotation.y = Math.PI / 2;
-scene.add(stand11);
-
-const stand12 = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 1.2), crowdMaterial);
-stand12.position.set(12, 0.2, 0);
-stand12.rotation.y = Math.PI / 2;
-scene.add(stand12);
 
 // walls and ceiling
 
@@ -369,13 +173,14 @@ function animate() {
 
         checkPlayerPunch();
         checkOpponentPunch();
+        checkPlayerLoss();
     }
 
     renderer.render(scene, camera);
     window.requestAnimationFrame(animate);
 }
 
-// creating the opening UI flow that shows the title first, then controls, then starts the actual game.
+// creating the opening UI flow that shows the title before starting the actual game.
 function createStartScreen() {
     const startOverlay = document.createElement("div");
     startOverlay.id = "start-screen";
@@ -400,16 +205,9 @@ function createStartScreen() {
     document.body.appendChild(startOverlay);
     showTitleScreen(startOverlay);
 
-    // first click moves to controls, second click removes the overlay and starts the game.
+    // clicking the title screen starts the game.
     startOverlay.addEventListener("click", (event) => {
         event.stopPropagation();
-
-        if (startScreenStep === "title") {
-            startScreenStep = "controls";
-            showControlsScreen(startOverlay);
-            return;
-        }
-
         startGame(startOverlay);
     });
 }
@@ -418,24 +216,7 @@ function createStartScreen() {
 function showTitleScreen(startOverlay) {
     startOverlay.innerHTML = `
         <h1 style="font-size: 64px; margin: 0 0 18px; letter-spacing: 0; text-transform: uppercase;">Consume Or Die</h1>
-        <p style="font-size: 20px; margin: 0;">Click to continue</p>
-    `;
-}
-
-// showing the control list after the first click.
-function showControlsScreen(startOverlay) {
-    startOverlay.innerHTML = `
-        <h1 style="font-size: 44px; margin: 0 0 28px; letter-spacing: 0; text-transform: uppercase;">Controls</h1>
-        <div style="font-size: 22px; line-height: 1.8; text-align: left;">
-            <div><strong>W</strong> - Move forward</div>
-            <div><strong>A</strong> - Move left</div>
-            <div><strong>S</strong> - Move backward</div>
-            <div><strong>D</strong> - Move right</div>
-            <div><strong>Mouse</strong> - Look around</div>
-            <div><strong>Left Click</strong> - Left punch</div>
-            <div><strong>Right Click</strong> - Right punch</div>
-        </div>
-        <p style="font-size: 18px; margin: 30px 0 0;">Click to start</p>
+        <p style="font-size: 20px; margin: 0;">Click to start</p>
     `;
 }
 
@@ -452,6 +233,7 @@ function startGame(startOverlay) {
     gameStarted = true;
     playCircusMusic();
     startOverlay.remove();
+    showControlsHint();
     clock.getDelta();
 
     const player = getPlayer();
@@ -459,4 +241,157 @@ function startGame(startOverlay) {
     if (player) {
         player.controls.lock();
     }
+}
+
+// creating the in-game controls hint and menu, hidden until the game starts.
+function createControlsMenu() {
+    controlsHint = document.createElement("div");
+    controlsHint.id = "controls-hint";
+    controlsHint.textContent = "Press E for controls";
+    controlsHint.style.position = "fixed";
+    controlsHint.style.left = "18px";
+    controlsHint.style.top = "18px";
+    controlsHint.style.zIndex = "30";
+    controlsHint.style.display = "none";
+    controlsHint.style.padding = "8px 10px";
+    controlsHint.style.background = "rgba(0, 0, 0, 0.55)";
+    controlsHint.style.color = "white";
+    controlsHint.style.fontFamily = "Arial, sans-serif";
+    controlsHint.style.fontSize = "15px";
+    controlsHint.style.fontWeight = "bold";
+    controlsHint.style.pointerEvents = "none";
+
+    controlsMenu = document.createElement("div");
+    controlsMenu.id = "controls-menu";
+    controlsMenu.innerHTML = `
+        <h2 style="font-size: 22px; margin: 0 0 12px; letter-spacing: 0;">Controls</h2>
+        <div><strong>W</strong> - Move forward</div>
+        <div><strong>A</strong> - Move left</div>
+        <div><strong>S</strong> - Move backward</div>
+        <div><strong>D</strong> - Move right</div>
+        <div><strong>Mouse</strong> - Look around</div>
+        <div><strong>Left Click</strong> - Left punch</div>
+        <div><strong>Right Click</strong> - Right punch</div>
+        <div><strong>E</strong> - Close controls</div>
+    `;
+    controlsMenu.style.position = "fixed";
+    controlsMenu.style.left = "18px";
+    controlsMenu.style.top = "58px";
+    controlsMenu.style.zIndex = "30";
+    controlsMenu.style.display = "none";
+    controlsMenu.style.padding = "14px 16px";
+    controlsMenu.style.background = "rgba(0, 0, 0, 0.78)";
+    controlsMenu.style.color = "white";
+    controlsMenu.style.fontFamily = "Arial, sans-serif";
+    controlsMenu.style.fontSize = "16px";
+    controlsMenu.style.lineHeight = "1.7";
+    controlsMenu.style.border = "2px solid rgba(255, 255, 255, 0.75)";
+    controlsMenu.style.boxSizing = "border-box";
+    controlsMenu.style.pointerEvents = "none";
+
+    document.body.appendChild(controlsHint);
+    document.body.appendChild(controlsMenu);
+}
+
+function showControlsHint() {
+    if (!controlsHint) return;
+    controlsHint.style.display = "block";
+}
+
+function handleGameMenuKeyDown(event) {
+    if (!gameStarted || event.code !== "KeyE" || event.repeat) return;
+
+    event.preventDefault();
+    controlsMenuOpen = !controlsMenuOpen;
+    controlsMenu.style.display = controlsMenuOpen ? "block" : "none";
+    controlsHint.textContent = controlsMenuOpen ? "Press E to close controls" : "Press E for controls";
+}
+
+function checkPlayerLoss() {
+    const player = getPlayer();
+
+    if (!player || player.health > 0) return;
+
+    showLosingScreen();
+}
+
+function showLosingScreen() {
+    if (gameOver) return;
+
+    gameOver = true;
+    gameStarted = false;
+
+    circusMusic.pause();
+    playBooSound();
+    hideControlsMenu();
+
+    const player = getPlayer();
+
+    if (player) {
+        player.controls.unlock();
+    }
+
+    losingOverlay = document.createElement("div");
+    losingOverlay.id = "losing-screen";
+    losingOverlay.style.position = "fixed";
+    losingOverlay.style.left = "0";
+    losingOverlay.style.top = "0";
+    losingOverlay.style.width = "100vw";
+    losingOverlay.style.height = "100vh";
+    losingOverlay.style.zIndex = "120";
+    losingOverlay.style.display = "flex";
+    losingOverlay.style.flexDirection = "column";
+    losingOverlay.style.alignItems = "center";
+    losingOverlay.style.justifyContent = "center";
+    losingOverlay.style.background = "rgba(0, 0, 0, 0.86)";
+    losingOverlay.style.color = "white";
+    losingOverlay.style.fontFamily = "Arial, sans-serif";
+    losingOverlay.style.textAlign = "center";
+    losingOverlay.style.padding = "32px";
+    losingOverlay.style.boxSizing = "border-box";
+
+    const title = document.createElement("h1");
+    title.textContent = "You Suck!";
+    title.style.fontSize = "72px";
+    title.style.margin = "0 0 28px";
+    title.style.letterSpacing = "0";
+    title.style.textTransform = "uppercase";
+
+    const restartButton = document.createElement("button");
+    restartButton.textContent = "Restart";
+    restartButton.style.padding = "12px 24px";
+    restartButton.style.fontSize = "22px";
+    restartButton.style.fontWeight = "bold";
+    restartButton.style.cursor = "pointer";
+    restartButton.style.border = "2px solid white";
+    restartButton.style.borderRadius = "6px";
+    restartButton.style.background = "black";
+    restartButton.style.color = "white";
+
+    restartButton.addEventListener("click", () => {
+        window.location.reload();
+    });
+
+    losingOverlay.appendChild(title);
+    losingOverlay.appendChild(restartButton);
+    document.body.appendChild(losingOverlay);
+}
+
+function playBooSound() {
+    booSound.currentTime = 0;
+    booSound.play().catch(() => {
+        // browser audio rules can still block playback in automated or unfocused contexts.
+    });
+}
+
+function hideControlsMenu() {
+    if (controlsHint) {
+        controlsHint.style.display = "none";
+    }
+
+    if (controlsMenu) {
+        controlsMenu.style.display = "none";
+    }
+
+    controlsMenuOpen = false;
 }
