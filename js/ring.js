@@ -4,31 +4,41 @@ export function createRing(scene) {
 
     // materials
     const floorMaterial = new THREE.MeshStandardMaterial({
-        color: 'beige'
+        color: 0x8b7355 
     });
-    floorMaterial.roughness = 0.9;
+    floorMaterial.roughness = 1.0;
     
     const groundMaterial = new THREE.MeshStandardMaterial({
-        color: "maroon"
+        color: 0x3a3028 
     });
-    groundMaterial.roughness = 0.95;
+    groundMaterial.roughness = 1.0;
     
     const postMaterial = new THREE.MeshStandardMaterial({
-        color: "blue"
+        color: 0x888888 
     });
-    
+    postMaterial.roughness = 0.8;
+    postMaterial.metalness = 0.4;
+
     const ropeMaterial = new THREE.MeshStandardMaterial({
-        color: "red"
+        color: 0xcc3322
     });
-    
+    ropeMaterial.roughness = 0.9;
+
     const crowdMaterial = new THREE.MeshStandardMaterial({
-        color: "white"
+        color: 0x2a2a2a 
     });
-    
+    crowdMaterial.roughness = 1.0;
+
     const wallMaterial = new THREE.MeshStandardMaterial({
-        color: "black"
+        color: 0x4a3f35 
     });
-    
+    wallMaterial.roughness = 1.0;
+
+    const windowMaterial = new THREE.MeshBasicMaterial({ color: 0xfffae0 
+    });
+
+    const skylightMaterial = new THREE.MeshBasicMaterial({ color: 0xfff8e8 });
+
     // floor
     
     //ring floor
@@ -203,7 +213,67 @@ export function createRing(scene) {
     stand12.position.set(12, 0.2, 0);
     stand12.rotation.y = Math.PI / 2;
     scene.add(stand12);
-    
+
+    //walls and ceiling
+
+    const wallFront = new THREE.Mesh(new THREE.BoxGeometry(40,20,0.5), wallMaterial);
+    wallFront.position.set(0,5,-20);
+    scene.add(wallFront);
+
+    const wallBack = new THREE.Mesh(new THREE.BoxGeometry(40,20,0.5), wallMaterial);
+    wallBack.position.set(0,5,20);
+    scene.add(wallBack);
+
+    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(40,20,0.5), wallMaterial);
+    wallLeft.position.set(-20,5,0);
+    wallLeft.rotation.y = Math.PI / 2;
+    scene.add(wallLeft);
+
+    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(40,20,0.5), wallMaterial);
+    wallRight.position.set(20,5,0);
+    wallRight.rotation.y = Math.PI / 2;
+    scene.add(wallRight);
+
+    const ceiling = new THREE.Mesh(new THREE.BoxGeometry(40, 0.5, 40), wallMaterial);
+    ceiling.position.set(0,15,0);
+    scene.add(ceiling);
+
+    // windows
+
+    const windowLeft1 = new THREE.Mesh(new THREE.PlaneGeometry(8,6), windowMaterial);
+    windowLeft1.position.set(-19.7, 6, -5);
+    windowLeft1.rotation.y = Math.PI/2;
+    scene.add(windowLeft1);
+
+    const windowLeft2 = new THREE.Mesh(new THREE.PlaneGeometry(8,6), windowMaterial);
+    windowLeft2.position.set(-19.7, 6, 0);
+    windowLeft2.rotation.y = Math.PI/2;
+    scene.add(windowLeft2);
+
+    const windowLeft3 = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), windowMaterial);
+    windowLeft3.position.set(-19.7, 6, 5);
+    windowLeft3.rotation.y = Math.PI / 2;
+    scene.add(windowLeft3);
+
+    const windowRight1 = new THREE.Mesh(new THREE.PlaneGeometry(8,6), windowMaterial);
+    windowRight1.position.set(19.7, 6, -5);
+    windowRight1.rotation.y = -Math.PI/2;
+    scene.add(windowRight1);
+
+    const windowRight2 = new THREE.Mesh(new THREE.PlaneGeometry(8,6), windowMaterial);
+    windowRight2.position.set(19.7, 6, 0);
+    windowRight2.rotation.y = -Math.PI/2;
+    scene.add(windowRight2);
+
+    const windowRight3 = new THREE.Mesh(new THREE.PlaneGeometry(8,6), windowMaterial);
+    windowRight3.position.set(19.7, 6, 5);
+    windowRight3.rotation.y = -Math.PI/2;
+    scene.add(windowRight3);
+
+    const skyLight = new THREE.Mesh(new THREE.PlaneGeometry(16,16), skylightMaterial);
+    skyLight.position.set(0,14.7,0);
+    skyLight.rotation.x = Math.PI / 2;
+    scene.add(skyLight);
 };
 
 export const ringBounds = {
