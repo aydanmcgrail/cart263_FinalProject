@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { loadOpponent, updateOpponent } from "./opponent.js";
+import { loadOpponent, updateOpponent, getOpponentHealth } from "./opponent.js";
 import { setupPlayer, updatePlayer, getPlayer } from "./player.js";
 import { createRing, ringBounds } from "./ring.js";
 import { lightSetUp } from "./lighting.js";
-import { createStartScreen, createControlsMenu, showControlsHint, showLosingScreen } from "./ui.js";
-import { playCircusMusic, stopCircusMusic, playBooSound } from "./audio.js";
+import { createStartScreen, createControlsMenu, showControlsHint, showLosingScreen, showWinningScreen } from "./ui.js";
+import { playCircusMusic, stopCircusMusic, playBooSound, playYaySound } from "./audio.js";
 import { checkPlayerPunch, checkOpponentPunch } from "./combat.js";
 
 
@@ -78,6 +78,7 @@ function animate() {
         checkPlayerPunch();
         checkOpponentPunch();
         checkPlayerLoss();
+        checkPlayerWin();
     }
 
     renderer.render(scene, camera);
@@ -120,3 +121,19 @@ function checkPlayerLoss() {
     });
 }
 
+function checkPlayerWin() {
+    const player = getPlayer();
+
+    if (!player || player.health <= 0 || getOpponentHealth() > 0 || gameOver) return;
+
+    gameOver = true;
+    gameStarted = false;
+
+    stopCircusMusic();
+    playYaySound();
+    player.controls.unlock();
+
+    showWinningScreen(() => {
+        window.location.reload();
+    });
+}

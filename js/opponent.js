@@ -92,6 +92,10 @@ export function getOpponent() {
     return opponent;
 }
 
+export function getOpponentHealth() {
+    return opponentHealth;
+}
+
 // function to apply damage to the opponent, ensuring health does not drop below 0 and logging the current health to the console.
 export function damageOpponent(amount) {
     if (opponentHealth <= 0) return;

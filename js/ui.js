@@ -2,6 +2,7 @@ let controlsHint;
 let controlsMenu;
 let controlsMenuOpen = false;
 let losingOverlay;
+let winningOverlay;
 
 // creating the opening UI flow that shows the title before starting the actual game.
 export function createStartScreen(onStart) {
@@ -128,7 +129,7 @@ export function showLosingScreen(onRestart) {
     losingOverlay.style.boxSizing = "border-box";
 
     const title = document.createElement("h1");
-    title.textContent = "You Suck!";
+    title.textContent = "Go Back To Work, Prole!";
     title.style.fontSize = "72px";
     title.style.margin = "0 0 28px";
     title.style.letterSpacing = "0";
@@ -152,6 +153,59 @@ export function showLosingScreen(onRestart) {
     losingOverlay.appendChild(title);
     losingOverlay.appendChild(restartButton);
     document.body.appendChild(losingOverlay);
+}
+
+// Winning screen that appears when the opponent is defeated while the player is alive.
+export function showWinningScreen(onRestart) {
+    if (winningOverlay) return;
+
+    hideControlsMenu();
+
+    winningOverlay = document.createElement("div");
+    winningOverlay.id = "winning-screen";
+    winningOverlay.style.position = "fixed";
+    winningOverlay.style.left = "0";
+    winningOverlay.style.top = "0";
+    winningOverlay.style.width = "100vw";
+    winningOverlay.style.height = "100vh";
+    winningOverlay.style.zIndex = "120";
+    winningOverlay.style.display = "flex";
+    winningOverlay.style.flexDirection = "column";
+    winningOverlay.style.alignItems = "center";
+    winningOverlay.style.justifyContent = "center";
+    winningOverlay.style.background = "rgba(0, 0, 0, 0.86)";
+    winningOverlay.style.color = "white";
+    winningOverlay.style.fontFamily = "Arial, sans-serif";
+    winningOverlay.style.textAlign = "center";
+    winningOverlay.style.padding = "32px";
+    winningOverlay.style.boxSizing = "border-box";
+
+    const title = document.createElement("h1");
+    title.textContent = "Congratulations! You have been rewarded with an unpaid 5-minute vacation!";
+    title.style.fontSize = "44px";
+    title.style.maxWidth = "920px";
+    title.style.margin = "0 0 28px";
+    title.style.letterSpacing = "0";
+    title.style.lineHeight = "1.15";
+
+    const restartButton = document.createElement("button");
+    restartButton.textContent = "Restart";
+    restartButton.style.padding = "12px 24px";
+    restartButton.style.fontSize = "22px";
+    restartButton.style.fontWeight = "bold";
+    restartButton.style.cursor = "pointer";
+    restartButton.style.border = "2px solid white";
+    restartButton.style.borderRadius = "6px";
+    restartButton.style.background = "black";
+    restartButton.style.color = "white";
+
+    restartButton.addEventListener("click", () => {
+        onRestart();
+    });
+
+    winningOverlay.appendChild(title);
+    winningOverlay.appendChild(restartButton);
+    document.body.appendChild(winningOverlay);
 }
 
 // hiding the controls menu
