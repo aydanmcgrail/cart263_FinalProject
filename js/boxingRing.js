@@ -70,10 +70,13 @@ lightSetUp(scene);
 
 window.requestAnimationFrame(animate);
 
+// tick function that updates the game every frame
 function animate() {
 
+    // time elapsed since last frame
     const delta = clock.getDelta();
 
+    // actual game updates
     if (gameStarted) {
         updatePlayer(delta, ringBounds);
         updateOpponent(delta, ringBounds);
@@ -107,6 +110,7 @@ function startGame(startOverlay) {
     }
 }
 
+// check if the player lost, if they have no health. Routes to lose screen
 function checkPlayerLoss() {
     const player = getPlayer();
 
@@ -124,6 +128,7 @@ function checkPlayerLoss() {
     });
 }
 
+// check if the player has won by making sure they have health while the opponent has none. Routes to win screen
 function checkPlayerWin() {
     const player = getPlayer();
 
