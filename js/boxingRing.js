@@ -6,6 +6,7 @@ import { lightSetUp } from "./lighting.js";
 import { createStartScreen, createControlsMenu, showControlsHint, showLosingScreen, showWinningScreen } from "./ui.js";
 import { playCircusMusic, stopCircusMusic, playBooSound, playYaySound } from "./audio.js";
 import { checkPlayerPunch, checkOpponentPunch } from "./combat.js";
+import { loadMuskSpectator } from "./spectators.js";
 
 
 // scene
@@ -49,6 +50,7 @@ window.addEventListener("resize", () => {
 
 // create the ring
 createRing(scene);
+loadMuskSpectator(scene);
 
 
 
