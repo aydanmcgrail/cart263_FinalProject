@@ -147,7 +147,7 @@ function createGlove(side) {
 
     return group;
 }
-
+// preparing the glove material by ensuring it is double-sided and has a minimum roughness for better lighting and visibility in the scene.
 function prepareGloveMaterial(material) {
     const preparedMaterial = material.clone();
     preparedMaterial.side = THREE.DoubleSide;
@@ -155,7 +155,7 @@ function prepareGloveMaterial(material) {
 
     return preparedMaterial;
 }
-
+// function to calculate the base position of the gloves relative to the camera, adjusting for different aspect ratios to keep the gloves in a comfortable and consistent position on the screen. The gloves are positioned slightly further apart and lower on wider screens, and closer together and higher on narrower screens.
 function getBaseGlovePosition(side) {
     const aspect = player?.camera.aspect ?? window.innerWidth / window.innerHeight;
     const narrowAmount = THREE.MathUtils.clamp((1.15 - aspect) / 0.75, 0, 1);
